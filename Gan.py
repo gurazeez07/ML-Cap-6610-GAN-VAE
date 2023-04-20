@@ -22,16 +22,14 @@ import numpy as np
 
 class GAN():
     def __init__(self):
-        # --------------------------------- #
-        #   行28，列28，也就是mnist的shape
-        # --------------------------------- #
+       
         self.img_rows = 28
         self.img_cols = 28
         self.channels = 1
         # 28,28,1
         self.img_shape = (self.img_rows, self.img_cols, self.channels)
         self.latent_dim = 100
-        # adam优化器
+    
         optimizer = Adam(learning_rate=0.0002, beta_1=0.5)
 
         self.discriminator = self.build_discriminator()
@@ -43,17 +41,14 @@ class GAN():
         # plot_model(self.generator, to_file='generator_plot.png', show_shapes=True, show_layer_names=True)
         gan_input = Input(shape=(self.latent_dim,))
         img = self.generator(gan_input)
-        # 在训练generate的时候不训练discriminator
+        
         self.discriminator.trainable = False
-        # 对生成的假图片进行预测
+        
         validity = self.discriminator(img)
         self.combined = Model(gan_input, validity)
         self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
 
-    def build_generator(self):
-        # --------------------------------- #
-        #   生成器，输入一串随机数字
-        # --------------------------------- #
+    def build_generator(self): 
         model = Sequential(name='generator')
 
         model.add(Dense(256, input_dim=self.latent_dim))
@@ -82,11 +77,9 @@ class GAN():
         return Model(noise, img)
 
     def build_discriminator(self):
-        # ----------------------------------- #
-        #   评价器，对输入进来的图片进行评价
-        # ----------------------------------- #
+        
         model = Sequential(name='discriminator')
-        # 输入一张图片
+        
         model.add(Flatten(input_shape=self.img_shape))
         # model.add(Conv2D(64, (3, 3), strides=(2, 2), padding='same', input_shape=(28, 28, 1)))
         model.add(Dense(512))
@@ -98,7 +91,7 @@ class GAN():
         model.add(LeakyReLU(alpha=0.2))
         # model.add(Dropout(0.4))
         model.add(Flatten())
-        # 判断真伪
+       
         model.add(Dense(1, activation='sigmoid'))
         model.summary()
         plot_model(model, show_shapes=True, to_file='./images/gan_discriminator.png')
@@ -108,9 +101,9 @@ class GAN():
         return Model(img, validity)
 
     def train(self, epochs, t_data, batch_size=64, sample_interval=50):
-        # 获得数据
+      
         res_g_loss = []
-        # 进行标准化
+     
         t_data = t_data / 127.5 - 1.
         t_data = np.expand_dims(t_data, axis=3)
 
@@ -120,10 +113,6 @@ class GAN():
 
         for epoch in range(epochs):
 
-            # --------------------------- #
-            #   随机选取batch_size个图片
-            #   对discriminator进行训练
-            # --------------------------- #
             idx = np.random.randint(0, t_data.shape[0], batch_size)
             imgs = t_data[idx]
 
@@ -136,7 +125,7 @@ class GAN():
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # --------------------------- #
-            #  训练generator
+            # generator
             # --------------------------- #
             noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
             g_loss = self.combined.train_on_batch(noise, valid)
